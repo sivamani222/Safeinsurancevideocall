@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trust Bank</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <!-- 👇️ your JS script should be below -->
+  </head>
+  <body></body>
+</html>
+
+<script type="text/javascript">
+  $(window).on("load", function () {
+    $("#myModal").modal("show");
+  });
+</script>
+<div class="container">
+  <!-- Modal -->
+  <div
+    class="modal fade"
+    id="myModal"
+    role="dialog"
+    data-backdrop="static"
+    data-keyboard="false"
+  >
+    <div class="modal-dialog">
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">
+            &times;
+          </button>
+          <h4 class="modal-title" id="hostname"></h4>
+        </div>
+
+        <form name="send-form" class="send-form" method="POST">
+          <div class="modal-body">
+            <div class="form-check">
+              <div class="headinglabel">
+                <i class="fa fa-microphone"></i>&nbsp;
+                <label>Use your Microphone</label>
+              </div>
+              <div class="videoButton">
+                <label class="relevantRadio" style="color: #0000ee">
+                  <input
+                    type="radio"
+                    value="true"
+                    name="microphone"
+                    #microphone="ngModel"
+                  />
+                  <span class="check"></span
+                  ><span class="labelName">Allow</span>&nbsp;
+                </label>
+                <label class="relevantRadio" style="color: #0000ee">
+                  <input type="radio" value="false" name="microphone" />
+                  <span class="check"></span
+                  ><span class="labelName">Block</span>
+                </label>
+              </div>
+            </div>
+            <div class="form-check">
+              <div class="headinglabel padding-top">
+                <i class="fa fa-camera"></i>
+                <label>Use your Camera</label>
+              </div>
+              <div class="videoButton">
+                <label class="relevantRadio" style="color: #ffffff">
+                  <input
+                    type="radio"
+                    value="true"
+                    name="video"
+                    #video="ngModel"
+                  />
+                  <span class="check"></span
+                  ><span class="labelName">Allow</span>&nbsp;
+                </label>
+                <label class="relevantRadio" style="color: #0000ee">
+                  <input type="radio" value="false" name="video" />
+                  <span class="check"></span
+                  ><span class="labelName">Block</span>
+                </label>
+              </div>
+              <div class="passcodefield">
+                <label style="padding-bottom: 5px">Enter Passcode</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="passcode"
+                  #passcode="ngModel"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-default"
+              data-dismiss="modal"
+              onclick="saveAllData()"
+            >
+              Save
+            </button>
+            <button type="button" class="btn btn-default" onclick="closeTab()">
+              Close
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function saveAllData() {
+    console.log("1 video");
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+
+    var video = $("input[type='radio'][name='video']:checked").val();
+    var micro = $("input[type='radio'][name='microphone']:checked").val();
+    var passcode = $("input[type='text'][name='passcode']").val();
+    video = video == "true";
+    micro = micro == "true";
+
+    //console.log('passcode123',passcode);
+
+    script.addEventListener("load", function (event) {
+      let request = new XMLHttpRequest();
+      request.open(
+        "GET",
+        "https://cap-fsdemo-e2e-fsretail87.pegatsdemo.com/prweb/api/v1/data/D_VideoCall?pyID=" +
+          passcode,
+        true
+      );
+      request.setRequestHeader(
+        "Authorization",
+        "Basic U2l2YUBjYzpydWxlc0AxMjM0"
+      );
+      request.onload = function () {
+        var data = JSON.parse(this.response);
+        //console.log('api',data);
+        //console.log('apimetting',data.MeetingID);
+        const meeting = new VideoSDKMeeting();
+        var meetingId = data.MeetingID;
+        var AgentName = data.AgentName;
+
+        const config = {
+          // name: data.AgentName,
+          name: AgentName,
+          apiKey: "8473fd3e-3b56-41e1-9a33-574ba493dee4",
+          meetingId: meetingId,
+          micEnabled: micro,
+          webcamEnabled: video,
+          participantCanToggleSelfWebcam: true,
+          participantCanToggleSelfMic: true,
+          screenShareEnabled: true,
+
+          recording: {
+            enabled: true,
+            webhookUrl: "https://www.videosdk.live/callback",
+            awsDirPath: `/recordings/${meetingId}/`,
+            autoStart: false,
+          },
+          permissions: {
+            //other permissions
+            changeLayout: true,
+            toggleParticipantWebcam: true,
+            toggleParticipantMic: true,
+            toggleRecording: true,
+          },
+
+          joinScreen: {
+            visible: true, // Show the join screen ?
+            title: "Safe Insurance Customer Service", // Meeting title
+            meetingUrl: window.location.href + meetingId, // Meeting joining url
+          },
+        };
+
+        console.log(config.micEnabled);
+        console.log(config.webcamEnabled);
+
+        meeting.init(config);
+      };
+      request.onerror = function () {
+        var data = JSON.parse(this.response);
+        console.log("api", data);
+      };
+      request.send();
+    });
+
+    script.src =
+      "https://sdk.videosdk.live/rtc-js-prebuilt/0.3.30/rtc-js-prebuilt.js";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  }
+  function closeTab() {
+    window.close();
+  }
+</script>
+
+<style>
+  .modal-content {
+    background: #333244;
+    border: none;
+    color: #ffffff;
+    padding: 15px;
+  }
+  .labelName {
+    margin-left: 10px;
+  }
+  .relevantRadio {
+    margin-left: 10px;
+  }
+  .modalBtn {
+    padding: 5px 17px;
+    border: none;
+    font-weight: 800;
+    border-radius: 10px;
+    color: #000;
+  }
+  .form-check {
+    padding-left: 0px !important;
+  }
+  .passcodefield {
+    padding-top: 20px;
+  }
+  .modal-header {
+    padding: 10px;
+    border-bottom: none;
+  }
+  .modal-footer {
+    padding: 10px;
+    border-top: none;
+  }
+  .padding-top {
+    padding-top: 15px;
+  }
+  .disabled {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+    border: none;
+  }
+</style>
